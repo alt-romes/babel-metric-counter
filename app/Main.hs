@@ -11,28 +11,32 @@ main = do
   [logName] <- getArgs
 
   logs <- filter (/= Ignore) <$> parseFile logName
-  print logs
+  putStrLn "" -- logs
+
+  let sl = subscribeLatencies logs
+      pl = publishLatencies logs
+      rl = reliability logs
 
   putStr "Subscribe Average (seconds):   "
-  print $ average (subscribeLatencies logs)
+  print $ average sl
 
   putStr "Publish Average (seconds):     "
-  print $ average (publishLatencies logs)
+  print $ average pl
 
   putStr "Reliability Average (ratio): "
-  print $ average (reliability logs)
+  print $ average rl
   putStrLn ""
 
   putStrLn "Subscribe Latencies"
-  print (subscribeLatencies logs)
+  print sl
   putStrLn ""
 
   putStrLn "Publish Latencies"
-  print (publishLatencies logs)
+  print pl
   putStrLn ""
 
   putStrLn "Reliabilities"
-  print (reliability logs)
+  print rl
   putStrLn ""
 
 
