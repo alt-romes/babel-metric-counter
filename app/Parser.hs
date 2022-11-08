@@ -2,6 +2,8 @@
 {-# LANGUAGE TypeFamilies #-}
 module Parser where
 
+import qualified System.IO.Utf8 as Utf8
+import System.IO
 
 import Data.Void
 import Data.Time.Clock
@@ -46,7 +48,8 @@ logLine = (do
 
 parseFile :: FilePath -> IO [LogMsg]
 parseFile f = do
-  txt <- readFile f
-  case parse (many logLine) f txt of
-    Left bundle -> fail (errorBundlePretty bundle)
-    Right xs -> return xs
+  Utf8.withFile f ReadMode $ \h -> do
+    txt <- hGetContents h
+    case parse (many logLine) f txt of
+      Left bundle -> fail (errorBundlePretty bundle)
+      Right xs -> return xs
