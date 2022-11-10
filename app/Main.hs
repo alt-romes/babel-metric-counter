@@ -1,8 +1,9 @@
 {-# LANGUAGE LambdaCase #-}
 module Main where
 
+import Debug.Trace
 import qualified Data.Map as M
-import Data.List
+import Data.Maybe
 import System.Environment
 import Parser
 
@@ -42,18 +43,29 @@ main = do
 
 
 subscribeLatencies :: [LogMsg] -> [Time]
-subscribeLatencies msgs =
-    [ t2 - t1 | SubscriptionRequest t1 topic1 <- msgs
-              , SubscriptionReply   t2 topic2 <- msgs
-              , topic1 == topic2 ]
+subscribeLatencies msgs = mapMaybe toTimes $ M.toList $
+  foldr (\m acc -> case m of
+            SubscriptionRequest t topic1 -> M.alter (\case Nothing -> Just (Just t, Nothing); Just (_, t2) -> Just (Just t, t2)) topic1 acc
+            SubscriptionReply   t topic2 -> M.alter (\case Nothing -> Just (Nothing, Just t); Just (t1, _) -> Just (t1, Just t)) topic2 acc
+            _ -> acc) mempty msgs
+
+  where
+    toTimes (a,b) = case b of
+                      (Just c, Just d) -> Just $ d - c
+                      _ -> trace ("Couldn't find any subscription replies for " <> show a) Nothing
 
 publishLatencies :: [LogMsg] -> [Time]
-publishLatencies msgs =
-  map (maximum . (map (\(_, _, c) -> c))) $
-    groupBy (\(a,b,_) (c,d,_) -> a == c && b == d) $ sort
-      [ (topic1, s1, t2 - t1) | PublishRequest t1 topic1 s1 <- msgs
-                              , Delivered      t2 topic2 s2 <- msgs
-                              , topic1 == topic2, s1 == s2 ]
+publishLatencies msgs = mapMaybe toTimes $ M.toList $
+  foldr (\m acc -> case m of
+                     PublishRequest t topic s ->
+                       M.alter (\case Nothing -> Just (Just t, Nothing); Just (_, t2) -> Just (Just t,t2)) (topic, s) acc
+                     Delivered t topic s ->
+                       M.alter (\case Nothing -> Just (Nothing, Just t); Just (t1, t2) -> Just (t1, max t <$> t2)) (topic, s) acc
+                     _ -> acc) mempty msgs
+  where
+    toTimes (a,b) = case b of
+                      (Just c, Just d) -> Just (d - c)
+                      _ -> trace ("Couldn't find any delivered for " <> show a) Nothing
 
 
 reliability :: [LogMsg] -> [Double]
@@ -70,7 +82,6 @@ reliability msgs = map msgReliability publishedMsgs
                                                                                Just x  -> Just $ x + 1) (dt, di) acc
                                            _ -> acc
                                            ) mempty msgs
-                -- sum [ 1 | Delivered _ dt di <- msgs , dt == t, di == i ]
 
     nSubscriptions :: M.Map Topic Double
     nSubscriptions = foldr (\m acc -> case m of
@@ -78,7 +89,6 @@ reliability msgs = map msgReliability publishedMsgs
                                                                                       Just x  -> Just $ x + 1) dt acc
                                            _ -> acc
                                            ) mempty msgs
-                        -- sum [ 1 | SubscriptionRequest _  dt <- msgs, dt == t ]
 
     msgReliability :: (Topic, Id) -> Double
     msgReliability (t, i) = nDelivered M.! (t, i) / nSubscriptions M.! t
