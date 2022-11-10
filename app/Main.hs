@@ -91,7 +91,7 @@ reliability msgs = map msgReliability publishedMsgs
                                            ) mempty msgs
 
     msgReliability :: (Topic, Id) -> Double
-    msgReliability (t, i) = nDelivered M.! (t, i) / nSubscriptions M.! t
+    msgReliability (t, i) = (case M.lookup (t, i) nDelivered of Nothing -> 0; Just x -> x) / nSubscriptions M.! t
 
 
 average :: Fractional a => [a] -> a
