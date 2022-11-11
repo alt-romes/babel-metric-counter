@@ -2,7 +2,7 @@
 
 ## Logging
 
-There are 5 different types of messages that must be be logged by the upper
+There are 4 different types of messages that must be be logged by the upper
 layer application protocol in a particular format for the tool to parse and take
 into consideration when calculating the metrics.
 
