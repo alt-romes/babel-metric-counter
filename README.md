@@ -69,6 +69,12 @@ modifications and be concatenated into a single file, which could be done with
 cat log1.txt log2.txt log4.txt > all_logs.txt
 ```
 
+If you redirect from the stdout to a log file, you might get color escape codes mixed in the logs.
+To remove them, you can run
+```
+sed -e 's/\x1b\[[0-9;]*m//g' all_logs.txt > all_logs.clean.txt
+```
+
 Then, run metric counter with cabal passing the file name as an argument
 ```
 cabal run metric-counter all_logs.txt
