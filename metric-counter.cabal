@@ -72,7 +72,8 @@ executable metric-counter
                       parser-combinators,
                       time,
                       with-utf8,
-                      containers
+                      containers,
+                      text
 
     -- Directories containing source files.
     hs-source-dirs:   app

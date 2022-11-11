@@ -1,3 +1,4 @@
+{-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE GADTs #-}
 {-# LANGUAGE TypeFamilies #-}
 module Parser where
@@ -5,12 +6,14 @@ module Parser where
 import qualified System.IO.Utf8 as Utf8
 import System.IO
 
+import qualified Data.Text as T
+import qualified Data.Text.IO as T
 import Data.Void
 import Data.Time.Clock
 import Text.Megaparsec
 import Text.Megaparsec.Char
 
-type Parser = Parsec Void String
+type Parser = Parsec Void T.Text
 
 type Topic = String
 type Id = String
@@ -18,11 +21,11 @@ type Id = String
 type Time = NominalDiffTime
 
 data LogMsg
-  = PublishRequest Time Topic String -- [[PUBLISH REQUEST]]
-  | PublishReply Time Topic String
+  = PublishRequest Time Topic Id -- [[PUBLISH REQUEST]]
+  | PublishReply Time Topic Id
   | SubscriptionRequest Time Topic
   | SubscriptionReply Time Topic
-  | Delivered Time Topic String -- [[DELIVERED]]:(TOPIC)(ID)
+  | Delivered Time Topic Id -- [[DELIVERED]]:(TOPIC)(ID)
   | Ignore
   deriving (Show, Eq)
 
@@ -42,14 +45,17 @@ logLine = (do
   <|> (Ignore <$ takeUntil '\n')
 
     where
+      parens :: Parser a -> Parser a
       parens = between (char '(') (char ')')
+
+      identifier :: Parser Id
       identifier = many (alphaNumChar <|> char '_' <|> char '-')
+
       takeUntil x = takeWhileP Nothing (/= x) <* char x
 
 parseFile :: FilePath -> IO [LogMsg]
 parseFile f = do
-  Utf8.withFile f ReadMode $ \h -> do
-    txt <- hGetContents h
-    case parse (many logLine) f txt of
-      Left bundle -> fail (errorBundlePretty bundle)
-      Right xs -> return xs
+  txt <- T.readFile f
+  case parse (many logLine) f txt of
+    Left bundle -> fail (errorBundlePretty bundle)
+    Right xs -> return xs

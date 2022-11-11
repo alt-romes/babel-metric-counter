@@ -65,7 +65,8 @@ publishLatencies msgs = mapMaybe toTimes $ M.toList $
   where
     toTimes (a,b) = case b of
                       (Just c, Just d) -> Just (d - c)
-                      _ -> trace ("Couldn't find any delivered for " <> show a) Nothing
+                      (Nothing, _) -> trace ("Couldn't find any publish requests for " <> show a) Nothing
+                      (_, Nothing) -> trace ("Couldn't find any delivered for " <> show a) Nothing
 
 
 reliability :: [LogMsg] -> [Double]
