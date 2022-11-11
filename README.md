@@ -6,13 +6,12 @@ There are 5 different types of messages that must be be logged by the upper
 layer application protocol in a particular format for the tool to parse and take
 into consideration when calculating the metrics.
 
-The 5 types and their format are the following
+The 4 types and their format are the following
 
 ```
 [[SUBSCRIPTION REQUEST]]:topic_uuid
 [[SUBSCRIPTION REPLY]]:topic_uuid
 [[PUBLISH REQUEST]]:(topic_uuid)(message_uuid)
-[[PUBLISH REPLY]]:(topic_uuid)(message_uuid)
 [[DELIVERED]]:(topic_uuid)(message_uuid)
 ```
 
@@ -37,11 +36,6 @@ In the `AutomatedApp` class, this would look like:
     private void uponBroadcastTimer(DisseminationTimer broadcastTimer, long timerId) {
         // ... 
         logger.info("[[PUBLISH REQUEST]]:({})({})", request.getTopic(), request.getMsgID());
-    }
-
-    private void uponPublishReply(PublishReply reply, short sourceProto) {
-        // ...
-        logger.info("[[PUBLISH REPLY]]:({})({})", reply.getTopic(), reply.getMsgID());
     }
 
     private void uponDeliver(DeliverNotification reply, short sourceProto) {
