@@ -71,7 +71,7 @@ sed -e 's/\x1b\[[0-9;]*m//g' all_logs.txt > all_logs.clean.txt
 
 Then, run metric counter with cabal passing the file name as an argument
 ```
-cabal run metric-counter all_logs.txt
+cabal run metric-counter all_logs.clean.txt
 ```
 
 ## Compiling the application
@@ -84,5 +84,5 @@ bit with haskell, in which case I'd recommend installing
 the `haskell-language-server` and the VSCode extension that uses it).
 
 With that installed, you can run the above command `cabal run metric-counter
-all_logs.txt` which will compile the app if it hasn't yet.
+all_logs.clean.txt` which will compile the app if it hasn't yet.
 
