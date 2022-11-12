@@ -3,9 +3,6 @@
 {-# LANGUAGE TypeFamilies #-}
 module Parser where
 
-import qualified System.IO.Utf8 as Utf8
-import System.IO
-
 import qualified Data.Text as T
 import qualified Data.Text.IO as T
 import Data.Void
@@ -41,7 +38,7 @@ logLine = (do
            , SubscriptionRequest t <$ string "[[SUBSCRIPTION REQUEST]]:" <*> identifier
            , SubscriptionReply t   <$ string "[[SUBSCRIPTION REPLY]]:"   <*> identifier
            , Delivered t           <$ string "[[DELIVERED]]:"            <*> parens identifier <*> parens identifier
-           ]) <* newline) <|> (Ignore <$ takeUntil '\n'))
+           ]) <* takeUntil '\n') <|> (Ignore <$ takeUntil '\n'))
   <|> (Ignore <$ takeUntil '\n')
 
     where
