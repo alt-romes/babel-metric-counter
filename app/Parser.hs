@@ -3,6 +3,7 @@
 {-# LANGUAGE TypeFamilies #-}
 module Parser where
 
+import Data.Time
 import qualified Data.Text as T
 import qualified Data.Text.IO as T
 import Data.Void
@@ -28,7 +29,9 @@ data LogMsg
 
 
 pTime :: Parser Time
-pTime = secondsToNominalDiffTime . (/ 1000) . read <$> between (char '[') (char ']') (many digitChar)
+pTime = do
+  x <- between (char '[') (char ']') (many digitChar)
+  parseTimeM False undefined "%h:%m%s" x
 
 logLine :: Parser LogMsg
 logLine = (do
